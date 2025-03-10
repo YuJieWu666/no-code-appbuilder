@@ -1,9 +1,107 @@
 <script setup>
 // 导入组件
+import { ref, onMounted, nextTick } from 'vue';
 import ComponentLibrary from './components/ComponentLibrary.vue';
 import EditorCanvas from './components/EditorCanvas.vue';
 import PropertyPanel from './components/PropertyPanel.vue';
 import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
+import CodeExporter from './components/CodeExporter.vue';
+
+// 创建EditorCanvas的引用
+const editorCanvasRef = ref(null);
+
+// 组件挂载后检查引用
+onMounted(async () => {
+  console.log('App组件已挂载');
+  
+  // 等待DOM更新完成
+  await nextTick();
+  
+  console.log('EditorCanvas引用:', editorCanvasRef.value);
+  
+  // 详细检查画布对象
+  if (editorCanvasRef.value) {
+    console.log('画布组件列表:', editorCanvasRef.value.canvasComponents);
+    console.log('画布组件列表类型:', typeof editorCanvasRef.value.canvasComponents);
+    
+    if (editorCanvasRef.value.canvasComponents) {
+      console.log('画布组件数组长度:', editorCanvasRef.value.canvasComponents.value?.length);
+      console.log('画布组件数组内容:', JSON.stringify(editorCanvasRef.value.canvasComponents.value));
+    }
+  }
+  
+  // 监听画布组件变化
+  if (editorCanvasRef.value?.canvasComponents) {
+    console.log('设置画布组件变化监听');
+    // 直接在这里通过引用可以访问到最新的组件列表
+  }
+});
+
+// 当前选中的组件列表，可以传递给CodeExporter
+const getCurrentCanvasComponents = () => {
+  if (editorCanvasRef.value?.canvasComponents?.value) {
+    return editorCanvasRef.value.canvasComponents.value;
+  }
+  return [];
+};
+
+const initGlobalEventStorage = () => {
+  // 确保全局事件存储变量存在
+  if (typeof window !== 'undefined') {
+    // 清空先前的存储
+    window.__CANVAS_COMPONENTS_EVENTS__ = {};
+    
+    console.log('全局事件存储已初始化');
+    
+    // 监听组件事件更新事件
+    document.addEventListener('component-events-updated', (e) => {
+      const { componentId, events } = e.detail;
+      
+      // 确保存储对象存在
+      if (!window.__CANVAS_COMPONENTS_EVENTS__) {
+        window.__CANVAS_COMPONENTS_EVENTS__ = {};
+      }
+      
+      // 更新事件数据到全局存储
+      if (events && events.length > 0) {
+        window.__CANVAS_COMPONENTS_EVENTS__[componentId] = JSON.parse(JSON.stringify(events));
+        console.log(`全局事件存储：组件 ${componentId} 的事件已更新，现有 ${events.length} 个事件`);
+        
+        // 尝试同时存储不同格式的ID版本
+        // 1. 如果ID不包含前缀，添加前缀版本
+        if (!componentId.startsWith('component-')) {
+          window.__CANVAS_COMPONENTS_EVENTS__[`component-${componentId}`] = JSON.parse(JSON.stringify(events));
+        }
+        // 2. 如果ID包含前缀，同时存储无前缀版本 
+        else {
+          const rawId = componentId.replace('component-', '');
+          window.__CANVAS_COMPONENTS_EVENTS__[rawId] = JSON.parse(JSON.stringify(events));
+        }
+      } else {
+        // 如果没有事件，从存储中移除
+        delete window.__CANVAS_COMPONENTS_EVENTS__[componentId];
+        console.log(`全局事件存储：组件 ${componentId} 的事件已移除`);
+        
+        // 同时移除可能的其他格式版本
+        if (!componentId.startsWith('component-')) {
+          delete window.__CANVAS_COMPONENTS_EVENTS__[`component-${componentId}`];
+        } else {
+          delete window.__CANVAS_COMPONENTS_EVENTS__[componentId.replace('component-', '')];
+        }
+      }
+      
+      // 输出当前事件存储状态
+      console.log('当前全局事件存储中的组件:', Object.keys(window.__CANVAS_COMPONENTS_EVENTS__));
+    });
+    
+    console.log('已添加全局事件更新监听器');
+  }
+};
+
+// 组件挂载时初始化全局事件存储
+onMounted(() => {
+  initGlobalEventStorage();
+});
 </script>
 
 <template>
@@ -11,6 +109,9 @@ import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
     <!-- 顶部导航栏 -->
     <header class="header">
       <h1>零代码应用构建平台</h1>
+      <div class="header-actions">
+        <CodeExporter :canvas-ref="editorCanvasRef" />
+      </div>
     </header>
     
     <div class="main-content">
@@ -25,7 +126,7 @@ import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
         <h2>编辑区域</h2>
         <div class="canvas-container">
           <!-- 这里是拖拽组件的画布 -->
-          <EditorCanvas />
+          <EditorCanvas ref="editorCanvasRef" />
         </div>
       </main>
       
@@ -60,6 +161,7 @@ import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
   padding: 0;
   overflow: hidden;
   background-color: #f5f5f5;
+  position: relative;
 }
 
 .header {
@@ -68,6 +170,9 @@ import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
   padding: 10px 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .header h1 {
@@ -75,10 +180,16 @@ import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
   font-size: 1.5rem;
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .main-content {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
 .sidebar {
@@ -87,6 +198,7 @@ import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
   overflow-y: auto;
   background-color: white;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 5;
 }
 
 .left-sidebar {
@@ -110,6 +222,8 @@ import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .canvas-container {
@@ -118,6 +232,7 @@ import FunctionFlowEditor from './components/FunctionFlowEditor.vue';
   justify-content: center;
   align-items: center;
   padding: 20px;
+  position: relative;
 }
 
 .right-tabs {
@@ -188,5 +303,29 @@ document.addEventListener('DOMContentLoaded', () => {
       tabContents[index].style.display = 'block';
     });
   });
+});
+
+//初始化全局事件存储
+window.__CANVAS_COMPONENTS_EVENTS__ = {};
+
+// 监听组件事件更新事件
+document.addEventListener('component-events-updated', (event) => {
+  const { componentId, events } = event.detail;
+  
+  // 更新全局事件存储
+  if (!window.__CANVAS_COMPONENTS_EVENTS__) {
+    window.__CANVAS_COMPONENTS_EVENTS__ = {};
+  }
+  
+  if (events && events.length > 0) {
+    window.__CANVAS_COMPONENTS_EVENTS__[componentId] = JSON.parse(JSON.stringify(events));
+    console.log(`App - 全局事件存储已更新组件 ${componentId} 的事件数据`);
+  } else {
+    // 如果事件被清空，从存储中移除该组件的事件数据
+    if (window.__CANVAS_COMPONENTS_EVENTS__[componentId]) {
+      delete window.__CANVAS_COMPONENTS_EVENTS__[componentId];
+      console.log(`App - 已从全局事件存储中移除组件 ${componentId} 的事件数据`);
+    }
+  }
 });
 </script>

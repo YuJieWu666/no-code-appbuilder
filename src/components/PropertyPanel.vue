@@ -1,38 +1,113 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 
 // 当前选中的组件
 const selectedComponent = ref(null);
 
-// 组件属性分类
-const propertyCategories = ref([
-  {
+// 根据组件类型计算可用的属性组
+const availableProperties = computed(() => {
+  if (!selectedComponent.value) return [];
+  
+  // 基础属性组 - 所有组件都有
+  const baseProperties = {
     name: '基础属性',
     properties: [
-      { key: 'width', label: '宽度', type: 'number', unit: 'px' },
-      { key: 'height', label: '高度', type: 'number', unit: 'px' },
-      { key: 'content', label: '内容', type: 'text' }
+      { key: 'content', label: '内容', type: 'text' },
+      { key: 'width', label: '宽度', type: 'range', min: 50, max: 500, step: 1, unit: 'px' },
+      { key: 'height', label: '高度', type: 'range', min: 20, max: 500, step: 1, unit: 'px' },
     ]
-  },
-  {
+  };
+  
+  // 样式属性组 - 根据组件类型不同而有所不同
+  let styleProperties = {
     name: '样式属性',
-    properties: [
-      { key: 'style.backgroundColor', label: '背景颜色', type: 'color' },
-      { key: 'style.color', label: '文字颜色', type: 'color' },
-      { key: 'style.fontSize', label: '字体大小', type: 'number', unit: 'px' },
-      { key: 'style.borderRadius', label: '圆角', type: 'number', unit: 'px' },
-      { key: 'style.border', label: '边框', type: 'text' },
-      { key: 'style.padding', label: '内边距', type: 'text' },
-      { key: 'style.textAlign', label: '文本对齐', type: 'select', 
-        options: [
-          { value: 'left', label: '左对齐' },
-          { value: 'center', label: '居中' },
-          { value: 'right', label: '右对齐' }
-        ] 
-      }
-    ]
+    properties: []
+  };
+  
+  // 根据组件类型设置特定的样式属性
+  switch (selectedComponent.value.type) {
+    case 'button':
+      styleProperties.properties = [
+        { key: 'style.backgroundColor', label: '背景颜色', type: 'color' },
+        { key: 'style.color', label: '文字颜色', type: 'color' },
+        { key: 'style.borderRadius', label: '圆角', type: 'range', min: 0, max: 50, step: 1, unit: 'px' },
+        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' },
+        { key: 'style.fontWeight', label: '字体粗细', type: 'select', 
+          options: [
+            { value: 'normal', label: '正常' },
+            { value: 'bold', label: '粗体' }
+          ]
+        },
+        { key: 'style.textAlign', label: '对齐方式', type: 'buttonGroup', 
+          options: [
+            { value: 'left', label: '左对齐', icon: '←' },
+            { value: 'center', label: '居中', icon: '↔' },
+            { value: 'right', label: '右对齐', icon: '→' }
+          ]
+        }
+      ];
+      break;
+      
+    case 'text':
+      styleProperties.properties = [
+        { key: 'style.color', label: '文字颜色', type: 'color' },
+        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' },
+        { key: 'style.fontWeight', label: '字体粗细', type: 'select', 
+          options: [
+            { value: 'normal', label: '正常' },
+            { value: 'bold', label: '粗体' }
+          ]
+        },
+        { key: 'style.textAlign', label: '对齐方式', type: 'buttonGroup', 
+          options: [
+            { value: 'left', label: '左对齐', icon: '←' },
+            { value: 'center', label: '居中', icon: '↔' },
+            { value: 'right', label: '右对齐', icon: '→' }
+          ]
+        }
+      ];
+      break;
+      
+    case 'input':
+      styleProperties.properties = [
+        { key: 'style.backgroundColor', label: '背景颜色', type: 'color' },
+        { key: 'style.color', label: '文字颜色', type: 'color' },
+        { key: 'style.borderRadius', label: '圆角', type: 'range', min: 0, max: 50, step: 1, unit: 'px' },
+        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' }
+      ];
+      break;
+      
+    case 'image':
+      styleProperties.properties = [
+        { key: 'style.borderRadius', label: '圆角', type: 'range', min: 0, max: 50, step: 1, unit: 'px' },
+        { key: 'style.objectFit', label: '填充方式', type: 'select', 
+          options: [
+            { value: 'contain', label: '包含' },
+            { value: 'cover', label: '覆盖' },
+            { value: 'fill', label: '填充' }
+          ]
+        }
+      ];
+      break;
+      
+    case 'toggle':
+      styleProperties.properties = [
+        { key: 'style.backgroundColor', label: '轨道颜色', type: 'color' },
+        { key: 'style.color', label: '文字颜色', type: 'color' },
+        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' }
+      ];
+      break;
+      
+    default:
+      styleProperties.properties = [
+        { key: 'style.backgroundColor', label: '背景颜色', type: 'color' },
+        { key: 'style.color', label: '文字颜色', type: 'color' },
+        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' }
+      ];
   }
-]);
+  
+  return [baseProperties, styleProperties];
+});
 
 // 获取组件属性值
 const getPropertyValue = (component, property) => {
@@ -88,14 +163,32 @@ const setPropertyValue = (component, property, value) => {
 const handlePropertyChange = (property, event) => {
   if (!selectedComponent.value) return;
   
-  let value = event.target.value;
+  let value;
   
-  // 转换数字输入
-  if (property.type === 'number') {
-    value = parseInt(value, 10) || 0;
+  // 根据属性类型处理值
+  switch (property.type) {
+    case 'range':
+      value = parseInt(event.target.value, 10) || 0;
+      break;
+    case 'color':
+      value = event.target.value;
+      break;
+    case 'select':
+      value = event.target.value;
+      break;
+    case 'buttonGroup':
+      value = event; // 直接传入的值
+      break;
+    default:
+      value = event.target.value;
   }
   
   setPropertyValue(selectedComponent.value, property, value);
+};
+
+// 处理按钮组选择
+const handleButtonGroupSelect = (property, value) => {
+  handlePropertyChange(property, value);
 };
 
 // 监听组件选择事件
@@ -118,11 +211,11 @@ onUnmounted(() => {
   <div class="property-panel">
     <div v-if="selectedComponent" class="properties-container">
       <div class="component-type">
-        <span class="type-label">组件类型:</span>
+        <span class="type-icon" :class="'icon-' + selectedComponent.type"></span>
         <span class="type-value">{{ selectedComponent.name }}</span>
       </div>
       
-      <div v-for="category in propertyCategories" :key="category.name" class="property-category">
+      <div v-for="category in availableProperties" :key="category.name" class="property-category">
         <h3 class="category-title">{{ category.name }}</h3>
         
         <div class="property-list">
@@ -136,26 +229,40 @@ onUnmounted(() => {
                 type="text" 
                 :value="getPropertyValue(selectedComponent, property)"
                 @input="handlePropertyChange(property, $event)"
+                class="text-input"
               />
               
-              <input 
-                v-else-if="property.type === 'number'" 
-                type="number" 
-                :value="getPropertyValue(selectedComponent, property)"
-                @input="handlePropertyChange(property, $event)"
-              />
+              <!-- 滑块输入 -->
+              <div v-else-if="property.type === 'range'" class="range-input-container">
+                <input 
+                  type="range" 
+                  :min="property.min" 
+                  :max="property.max" 
+                  :step="property.step" 
+                  :value="getPropertyValue(selectedComponent, property)"
+                  @input="handlePropertyChange(property, $event)"
+                  class="range-input"
+                />
+                <span class="range-value">{{ getPropertyValue(selectedComponent, property) }}{{ property.unit }}</span>
+              </div>
               
-              <input 
-                v-else-if="property.type === 'color'" 
-                type="color" 
-                :value="getPropertyValue(selectedComponent, property)"
-                @input="handlePropertyChange(property, $event)"
-              />
+              <!-- 颜色选择器 -->
+              <div v-else-if="property.type === 'color'" class="color-picker-container">
+                <input 
+                  type="color" 
+                  :value="getPropertyValue(selectedComponent, property)"
+                  @input="handlePropertyChange(property, $event)"
+                  class="color-picker"
+                />
+                <span class="color-value">{{ getPropertyValue(selectedComponent, property) }}</span>
+              </div>
               
+              <!-- 下拉选择 -->
               <select 
                 v-else-if="property.type === 'select'" 
                 :value="getPropertyValue(selectedComponent, property)"
                 @change="handlePropertyChange(property, $event)"
+                class="select-input"
               >
                 <option 
                   v-for="option in property.options" 
@@ -165,15 +272,37 @@ onUnmounted(() => {
                   {{ option.label }}
                 </option>
               </select>
+              
+              <!-- 按钮组 -->
+              <div v-else-if="property.type === 'buttonGroup'" class="button-group">
+                <button 
+                  v-for="option in property.options" 
+                  :key="option.value"
+                  :class="{ active: getPropertyValue(selectedComponent, property) === option.value }"
+                  @click="handleButtonGroupSelect(property, option.value)"
+                  class="group-button"
+                  :title="option.label"
+                >
+                  {{ option.icon }}
+                </button>
+              </div>
+              
+              <!-- 默认文本输入 -->
+              <input 
+                v-else
+                type="text" 
+                :value="getPropertyValue(selectedComponent, property)"
+                @input="handlePropertyChange(property, $event)"
+                class="text-input"
+              />
             </div>
-            
-            <span v-if="property.unit" class="property-unit">{{ property.unit }}</span>
           </div>
         </div>
       </div>
     </div>
     
     <div v-else class="no-selection">
+      <div class="no-selection-icon">🖱️</div>
       <p>请选择一个组件以编辑其属性</p>
     </div>
   </div>
@@ -181,97 +310,215 @@ onUnmounted(() => {
 
 <style scoped>
 .property-panel {
-  padding: 0 5px;
+  padding: 5px 10px;
   height: 100%;
   overflow-y: auto;
+  background-color: #f8fafc;
 }
 
 .properties-container {
-  padding: 10px 0;
+  padding: 15px 5px;
 }
 
 .component-type {
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: white;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
 }
 
-.type-label {
-  font-weight: 500;
+.type-icon {
+  width: 20px;
+  height: 20px;
   margin-right: 10px;
-  color: #4a5568;
-  font-size: 0.9rem;
+  background-color: #4299e1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
 }
 
 .type-value {
-  color: #2d3748;
-  font-size: 0.9rem;
   font-weight: 600;
+  color: #2d3748;
+  font-size: 0.95rem;
 }
 
 .property-category {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .category-title {
   font-size: 1rem;
-  margin: 10px 0;
+  margin: 5px 0 15px 0;
   color: #4a5568;
   font-weight: 600;
+  position: relative;
+  padding-left: 12px;
+}
+
+.category-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background-color: #4299e1;
+  border-radius: 2px;
 }
 
 .property-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 15px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .property-item {
   display: flex;
-  align-items: center;
-  font-size: 0.9rem;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .property-label {
-  width: 80px;
   color: #4a5568;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .property-input {
-  flex: 1;
+  width: 100%;
 }
 
-.property-input input,
-.property-input select {
+.text-input {
   width: 100%;
-  padding: 4px 8px;
+  padding: 8px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
   font-size: 0.85rem;
+  transition: border-color 0.2s;
 }
 
-.property-input input[type="color"] {
+.text-input:focus {
+  border-color: #4299e1;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.range-input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.range-input {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  outline: none;
+}
+
+.range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #4299e1;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.range-value {
+  width: 50px;
+  text-align: right;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.color-picker-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-picker {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
   padding: 0;
-  height: 24px;
+  overflow: hidden;
 }
 
-.property-unit {
-  margin-left: 5px;
-  color: #718096;
-  font-size: 0.8rem;
+.color-value {
+  font-size: 0.85rem;
+  color: #4a5568;
+  flex: 1;
+}
+
+.select-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  background-color: white;
+  color: #4a5568;
+}
+
+.button-group {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.group-button {
+  flex: 1;
+  padding: 6px 0;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  color: #4a5568;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.group-button:not(:last-child) {
+  border-right: none;
+}
+
+.group-button.active {
+  background-color: #4299e1;
+  color: white;
+  border-color: #4299e1;
 }
 
 .no-selection {
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: #a0aec0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   text-align: center;
   padding: 20px 0;
+}
+
+.no-selection-icon {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
 }
 </style> 

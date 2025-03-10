@@ -1,38 +1,25 @@
 <script setup>
 import { ref } from 'vue';
 
-// 定义组件分类
-const categories = ref([
-  {
-    name: '基础组件',
-    components: [
-      { id: 'button', name: '按钮', icon: '▭', type: 'button' },
-      { id: 'text', name: '文本', icon: 'T', type: 'text' },
-      { id: 'input', name: '输入框', icon: '⌨', type: 'input' },
-      { id: 'image', name: '图片', icon: '🖼', type: 'image' }
-    ]
-  },
-  {
-    name: '容器组件',
-    components: [
-      { id: 'container', name: '容器', icon: '⬚', type: 'container' },
-      { id: 'form', name: '表单', icon: '📋', type: 'form' }
-    ]
-  },
-  {
-    name: '交互组件',
-    components: [
-      { id: 'toggle', name: '开关', icon: '⚇', type: 'toggle' },
-      { id: 'select', name: '下拉选择', icon: '▾', type: 'select' },
-      { id: 'slider', name: '滑块', icon: '━', type: 'slider' }
-    ]
-  }
+// 定义组件列表（简化版）
+const components = ref([
+  { id: 'button', name: '按钮', type: 'button' },
+  { id: 'text', name: '文本', type: 'text' },
+  { id: 'input', name: '输入框', type: 'input' },
+  { id: 'image', name: '图片', type: 'image' },
+  { id: 'toggle', name: '开关', type: 'toggle' }
 ]);
 
 // 开始拖拽时的处理函数
 const onDragStart = (event, component) => {
+  // 记录当前正在拖拽的组件
+  console.log('开始拖拽组件:', component);
+  
+  // 将组件数据转为JSON字符串
+  const componentData = JSON.stringify(component);
+  
   // 将组件数据传递给拖拽事件
-  event.dataTransfer.setData('application/json', JSON.stringify(component));
+  event.dataTransfer.setData('application/json', componentData);
   // 设置拖拽效果
   event.dataTransfer.effectAllowed = 'copy';
 };
@@ -40,21 +27,17 @@ const onDragStart = (event, component) => {
 
 <template>
   <div class="component-library">
-    <div v-for="category in categories" :key="category.name" class="component-category">
-      <h3 class="category-title">{{ category.name }}</h3>
-      <div class="component-grid">
-        <div
-          v-for="component in category.components"
-          :key="component.id"
-          class="component-item"
-          draggable="true"
-          @dragstart="onDragStart($event, component)"
-        >
-          <div class="component-icon">{{ component.icon }}</div>
-          <div class="component-name">{{ component.name }}</div>
-        </div>
-      </div>
-    </div>
+    <ul class="component-list">
+      <li
+        v-for="component in components"
+        :key="component.id"
+        class="component-item"
+        draggable="true"
+        @dragstart="onDragStart($event, component)"
+      >
+        {{ component.name }}
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -63,54 +46,34 @@ const onDragStart = (event, component) => {
   padding: 5px;
 }
 
-.component-category {
-  margin-bottom: 15px;
-}
-
-.category-title {
-  font-size: 1rem;
-  margin: 5px 0;
-  color: #4a5568;
-}
-
-.component-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+.component-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .component-item {
+  padding: 12px 15px;
+  margin-bottom: 8px;
   background-color: white;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   cursor: move;
   transition: all 0.2s;
+  font-size: 0.95rem;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
 }
 
 .component-item:hover {
   background-color: #f0f4f8;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  border-left: 3px solid #4299e1;
 }
 
-.component-icon {
-  font-size: 1.5rem;
-  margin-bottom: 5px;
-  color: #4a5568;
-  height: 30px;
-  width: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.component-name {
-  font-size: 0.8rem;
-  color: #4a5568;
-  text-align: center;
+.component-item:active {
+  background-color: #ebf4ff;
 }
 </style> 
