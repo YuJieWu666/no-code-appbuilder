@@ -1,27 +1,27 @@
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 
 // 定义组件列表（简化版）
 const components = ref([
-  { id: 'button', name: '按钮', type: 'button' },
-  { id: 'text', name: '文本', type: 'text' },
-  { id: 'input', name: '输入框', type: 'input' },
-  { id: 'image', name: '图片', type: 'image' },
-  { id: 'toggle', name: '开关', type: 'toggle' }
+  { id: "button", name: "按钮", type: "button" },
+  { id: "text", name: "文本", type: "text" },
+  { id: "input", name: "输入框", type: "input" },
+  { id: "image", name: "图片", type: "image" },
+  { id: "toggle", name: "开关", type: "toggle" },
 ]);
 
 // 开始拖拽时的处理函数
 const onDragStart = (event, component) => {
   // 记录当前正在拖拽的组件
-  console.log('开始拖拽组件:', component);
-  
+  console.log("开始拖拽组件:", component);
+
   // 将组件数据转为JSON字符串
   const componentData = JSON.stringify(component);
-  
+
   // 将组件数据传递给拖拽事件
-  event.dataTransfer.setData('application/json', componentData);
+  event.dataTransfer.setData("application/json", componentData);
   // 设置拖拽效果
-  event.dataTransfer.effectAllowed = 'copy';
+  event.dataTransfer.effectAllowed = "copy";
 };
 </script>
 
@@ -76,4 +76,4 @@ const onDragStart = (event, component) => {
 .component-item:active {
   background-color: #ebf4ff;
 }
-</style> 
+</style>

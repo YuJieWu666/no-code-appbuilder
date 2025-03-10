@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from "vue";
 
 // 当前选中的组件
 const selectedComponent = ref(null);
@@ -7,150 +7,248 @@ const selectedComponent = ref(null);
 // 根据组件类型计算可用的属性组
 const availableProperties = computed(() => {
   if (!selectedComponent.value) return [];
-  
+
   // 基础属性组 - 所有组件都有
   const baseProperties = {
-    name: '基础属性',
+    name: "基础属性",
     properties: [
-      { key: 'content', label: '内容', type: 'text' },
-      { key: 'width', label: '宽度', type: 'range', min: 50, max: 500, step: 1, unit: 'px' },
-      { key: 'height', label: '高度', type: 'range', min: 20, max: 500, step: 1, unit: 'px' },
-    ]
+      { key: "content", label: "内容", type: "text" },
+      {
+        key: "width",
+        label: "宽度",
+        type: "range",
+        min: 50,
+        max: 500,
+        step: 1,
+        unit: "px",
+      },
+      {
+        key: "height",
+        label: "高度",
+        type: "range",
+        min: 20,
+        max: 500,
+        step: 1,
+        unit: "px",
+      },
+    ],
   };
-  
+
   // 样式属性组 - 根据组件类型不同而有所不同
   let styleProperties = {
-    name: '样式属性',
-    properties: []
+    name: "样式属性",
+    properties: [],
   };
-  
+
   // 根据组件类型设置特定的样式属性
   switch (selectedComponent.value.type) {
-    case 'button':
+    case "button":
       styleProperties.properties = [
-        { key: 'style.backgroundColor', label: '背景颜色', type: 'color' },
-        { key: 'style.color', label: '文字颜色', type: 'color' },
-        { key: 'style.borderRadius', label: '圆角', type: 'range', min: 0, max: 50, step: 1, unit: 'px' },
-        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' },
-        { key: 'style.fontWeight', label: '字体粗细', type: 'select', 
-          options: [
-            { value: 'normal', label: '正常' },
-            { value: 'bold', label: '粗体' }
-          ]
+        { key: "style.backgroundColor", label: "背景颜色", type: "color" },
+        { key: "style.color", label: "文字颜色", type: "color" },
+        {
+          key: "style.borderRadius",
+          label: "圆角",
+          type: "range",
+          min: 0,
+          max: 50,
+          step: 1,
+          unit: "px",
         },
-        { key: 'style.textAlign', label: '对齐方式', type: 'buttonGroup', 
-          options: [
-            { value: 'left', label: '左对齐', icon: '←' },
-            { value: 'center', label: '居中', icon: '↔' },
-            { value: 'right', label: '右对齐', icon: '→' }
-          ]
-        }
-      ];
-      break;
-      
-    case 'text':
-      styleProperties.properties = [
-        { key: 'style.color', label: '文字颜色', type: 'color' },
-        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' },
-        { key: 'style.fontWeight', label: '字体粗细', type: 'select', 
-          options: [
-            { value: 'normal', label: '正常' },
-            { value: 'bold', label: '粗体' }
-          ]
+        {
+          key: "style.fontSize",
+          label: "字体大小",
+          type: "range",
+          min: 12,
+          max: 40,
+          step: 1,
+          unit: "px",
         },
-        { key: 'style.textAlign', label: '对齐方式', type: 'buttonGroup', 
+        {
+          key: "style.fontWeight",
+          label: "字体粗细",
+          type: "select",
           options: [
-            { value: 'left', label: '左对齐', icon: '←' },
-            { value: 'center', label: '居中', icon: '↔' },
-            { value: 'right', label: '右对齐', icon: '→' }
-          ]
-        }
-      ];
-      break;
-      
-    case 'input':
-      styleProperties.properties = [
-        { key: 'style.backgroundColor', label: '背景颜色', type: 'color' },
-        { key: 'style.color', label: '文字颜色', type: 'color' },
-        { key: 'style.borderRadius', label: '圆角', type: 'range', min: 0, max: 50, step: 1, unit: 'px' },
-        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' }
-      ];
-      break;
-      
-    case 'image':
-      styleProperties.properties = [
-        { key: 'style.borderRadius', label: '圆角', type: 'range', min: 0, max: 50, step: 1, unit: 'px' },
-        { key: 'style.objectFit', label: '填充方式', type: 'select', 
+            { value: "normal", label: "正常" },
+            { value: "bold", label: "粗体" },
+          ],
+        },
+        {
+          key: "style.textAlign",
+          label: "对齐方式",
+          type: "buttonGroup",
           options: [
-            { value: 'contain', label: '包含' },
-            { value: 'cover', label: '覆盖' },
-            { value: 'fill', label: '填充' }
-          ]
-        }
+            { value: "left", label: "左对齐", icon: "←" },
+            { value: "center", label: "居中", icon: "↔" },
+            { value: "right", label: "右对齐", icon: "→" },
+          ],
+        },
       ];
       break;
-      
-    case 'toggle':
+
+    case "text":
       styleProperties.properties = [
-        { key: 'style.backgroundColor', label: '轨道颜色', type: 'color' },
-        { key: 'style.color', label: '文字颜色', type: 'color' },
-        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' }
+        { key: "style.color", label: "文字颜色", type: "color" },
+        {
+          key: "style.fontSize",
+          label: "字体大小",
+          type: "range",
+          min: 12,
+          max: 40,
+          step: 1,
+          unit: "px",
+        },
+        {
+          key: "style.fontWeight",
+          label: "字体粗细",
+          type: "select",
+          options: [
+            { value: "normal", label: "正常" },
+            { value: "bold", label: "粗体" },
+          ],
+        },
+        {
+          key: "style.textAlign",
+          label: "对齐方式",
+          type: "buttonGroup",
+          options: [
+            { value: "left", label: "左对齐", icon: "←" },
+            { value: "center", label: "居中", icon: "↔" },
+            { value: "right", label: "右对齐", icon: "→" },
+          ],
+        },
       ];
       break;
-      
+
+    case "input":
+      styleProperties.properties = [
+        { key: "style.backgroundColor", label: "背景颜色", type: "color" },
+        { key: "style.color", label: "文字颜色", type: "color" },
+        {
+          key: "style.borderRadius",
+          label: "圆角",
+          type: "range",
+          min: 0,
+          max: 50,
+          step: 1,
+          unit: "px",
+        },
+        {
+          key: "style.fontSize",
+          label: "字体大小",
+          type: "range",
+          min: 12,
+          max: 40,
+          step: 1,
+          unit: "px",
+        },
+      ];
+      break;
+
+    case "image":
+      styleProperties.properties = [
+        {
+          key: "style.borderRadius",
+          label: "圆角",
+          type: "range",
+          min: 0,
+          max: 50,
+          step: 1,
+          unit: "px",
+        },
+        {
+          key: "style.objectFit",
+          label: "填充方式",
+          type: "select",
+          options: [
+            { value: "contain", label: "包含" },
+            { value: "cover", label: "覆盖" },
+            { value: "fill", label: "填充" },
+          ],
+        },
+      ];
+      break;
+
+    case "toggle":
+      styleProperties.properties = [
+        { key: "style.backgroundColor", label: "轨道颜色", type: "color" },
+        { key: "style.color", label: "文字颜色", type: "color" },
+        {
+          key: "style.fontSize",
+          label: "字体大小",
+          type: "range",
+          min: 12,
+          max: 40,
+          step: 1,
+          unit: "px",
+        },
+      ];
+      break;
+
     default:
       styleProperties.properties = [
-        { key: 'style.backgroundColor', label: '背景颜色', type: 'color' },
-        { key: 'style.color', label: '文字颜色', type: 'color' },
-        { key: 'style.fontSize', label: '字体大小', type: 'range', min: 12, max: 40, step: 1, unit: 'px' }
+        { key: "style.backgroundColor", label: "背景颜色", type: "color" },
+        { key: "style.color", label: "文字颜色", type: "color" },
+        {
+          key: "style.fontSize",
+          label: "字体大小",
+          type: "range",
+          min: 12,
+          max: 40,
+          step: 1,
+          unit: "px",
+        },
       ];
   }
-  
+
   return [baseProperties, styleProperties];
 });
 
 // 获取组件属性值
 const getPropertyValue = (component, property) => {
-  if (!component) return '';
-  
+  if (!component) return "";
+
   // 处理嵌套属性 (例如: 'style.backgroundColor')
-  if (property.key.includes('.')) {
-    const keys = property.key.split('.');
+  if (property.key.includes(".")) {
+    const keys = property.key.split(".");
     let value = component;
-    
     for (const key of keys) {
       if (value && value[key] !== undefined) {
         value = value[key];
       } else {
-        return '';
+        return "";
       }
     }
-    
     return value;
   }
-  
-  return component[property.key] || '';
+
+  // 特殊处理 text 属性
+  if (property.key === "text") {
+    return component.properties?.text || "";
+  }
+
+  return component.properties?.[property.key] || "";
 };
 
 // 设置组件属性值
 const setPropertyValue = (component, property, value) => {
   if (!component) return;
-  
-  if (property.key.includes('.')) {
-    const keys = property.key.split('.');
+
+  if (property.key.includes(".")) {
+    const keys = property.key.split(".");
     let target = component;
-    
+
     // 遍历直到倒数第二级
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
-      
+
       if (!target[key]) {
         target[key] = {};
       }
-      
+
       target = target[key];
     }
-    
+
     // 设置最后一级的值
     const lastKey = keys[keys.length - 1];
     target[lastKey] = value;
@@ -162,33 +260,14 @@ const setPropertyValue = (component, property, value) => {
 // 处理组件属性变更
 const handlePropertyChange = (property, event) => {
   if (!selectedComponent.value) return;
-  
-  let value;
-  
-  // 根据属性类型处理值
-  switch (property.type) {
-    case 'range':
-      value = parseInt(event.target.value, 10) || 0;
-      break;
-    case 'color':
-      value = event.target.value;
-      break;
-    case 'select':
-      value = event.target.value;
-      break;
-    case 'buttonGroup':
-      value = event; // 直接传入的值
-      break;
-    default:
-      value = event.target.value;
-  }
-  
-  setPropertyValue(selectedComponent.value, property, value);
+
+  // 直接更新属性
+  updateProperty(property.key, event.target.value);
 };
 
 // 处理按钮组选择
 const handleButtonGroupSelect = (property, value) => {
-  handlePropertyChange(property, value);
+  handlePropertyChange(property, { target: { value } });
 };
 
 // 监听组件选择事件
@@ -198,87 +277,160 @@ const onComponentSelected = (event) => {
 
 // 组件挂载时添加事件监听
 onMounted(() => {
-  document.addEventListener('component-selected', onComponentSelected);
+  document.addEventListener("component-selected", onComponentSelected);
 });
 
 // 组件卸载时移除事件监听
 onUnmounted(() => {
-  document.removeEventListener('component-selected', onComponentSelected);
+  document.removeEventListener("component-selected", onComponentSelected);
 });
+
+// 在属性更新时触发事件
+const updateProperty = (propertyName, value) => {
+  if (selectedComponent.value) {
+    // 创建一个新的组件对象，以确保响应式更新
+    const updatedComponent = { ...selectedComponent.value };
+
+    if (propertyName.includes(".")) {
+      const keys = propertyName.split(".");
+      let target = updatedComponent;
+
+      // 遍历直到倒数第二级
+      for (let i = 0; i < keys.length - 1; i++) {
+        const key = keys[i];
+        if (!target[key]) {
+          target[key] = {};
+        }
+        target = target[key];
+      }
+
+      // 设置最后一级的值
+      const lastKey = keys[keys.length - 1];
+      target[lastKey] = value;
+    } else {
+      if (!updatedComponent.properties) {
+        updatedComponent.properties = {};
+      }
+      updatedComponent.properties[propertyName] = value;
+    }
+
+    // 更新选中的组件
+    selectedComponent.value = updatedComponent;
+
+    // 触发属性更新事件
+    const updateEvent = new CustomEvent("property-updated", {
+      detail: {
+        componentId: updatedComponent.id,
+        propertyName,
+        value,
+      },
+    });
+    document.dispatchEvent(updateEvent);
+  }
+};
 </script>
 
 <template>
   <div class="property-panel">
     <div v-if="selectedComponent" class="properties-container">
       <div class="component-type">
-        <span class="type-icon" :class="'icon-' + selectedComponent.type"></span>
+        <span
+          class="type-icon"
+          :class="'icon-' + selectedComponent.type"
+        ></span>
         <span class="type-value">{{ selectedComponent.name }}</span>
       </div>
-      
-      <div v-for="category in availableProperties" :key="category.name" class="property-category">
+
+      <div
+        v-for="category in availableProperties"
+        :key="category.name"
+        class="property-category"
+      >
         <h3 class="category-title">{{ category.name }}</h3>
-        
+
         <div class="property-list">
-          <div v-for="property in category.properties" :key="property.key" class="property-item">
+          <div
+            v-for="property in category.properties"
+            :key="property.key"
+            class="property-item"
+          >
             <label class="property-label">{{ property.label }}</label>
-            
+
             <div class="property-input">
               <!-- 根据属性类型渲染不同的输入控件 -->
-              <input 
-                v-if="property.type === 'text'" 
-                type="text" 
+              <input
+                v-if="property.type === 'text'"
+                type="text"
                 :value="getPropertyValue(selectedComponent, property)"
                 @input="handlePropertyChange(property, $event)"
                 class="text-input"
               />
-              
+
               <!-- 滑块输入 -->
-              <div v-else-if="property.type === 'range'" class="range-input-container">
-                <input 
-                  type="range" 
-                  :min="property.min" 
-                  :max="property.max" 
-                  :step="property.step" 
+              <div
+                v-else-if="property.type === 'range'"
+                class="range-input-container"
+              >
+                <input
+                  type="range"
+                  :min="property.min"
+                  :max="property.max"
+                  :step="property.step"
                   :value="getPropertyValue(selectedComponent, property)"
                   @input="handlePropertyChange(property, $event)"
                   class="range-input"
                 />
-                <span class="range-value">{{ getPropertyValue(selectedComponent, property) }}{{ property.unit }}</span>
+                <span class="range-value"
+                  >{{ getPropertyValue(selectedComponent, property)
+                  }}{{ property.unit }}</span
+                >
               </div>
-              
+
               <!-- 颜色选择器 -->
-              <div v-else-if="property.type === 'color'" class="color-picker-container">
-                <input 
-                  type="color" 
+              <div
+                v-else-if="property.type === 'color'"
+                class="color-picker-container"
+              >
+                <input
+                  type="color"
                   :value="getPropertyValue(selectedComponent, property)"
                   @input="handlePropertyChange(property, $event)"
                   class="color-picker"
                 />
-                <span class="color-value">{{ getPropertyValue(selectedComponent, property) }}</span>
+                <span class="color-value">{{
+                  getPropertyValue(selectedComponent, property)
+                }}</span>
               </div>
-              
+
               <!-- 下拉选择 -->
-              <select 
-                v-else-if="property.type === 'select'" 
+              <select
+                v-else-if="property.type === 'select'"
                 :value="getPropertyValue(selectedComponent, property)"
                 @change="handlePropertyChange(property, $event)"
                 class="select-input"
               >
-                <option 
-                  v-for="option in property.options" 
-                  :key="option.value" 
+                <option
+                  v-for="option in property.options"
+                  :key="option.value"
                   :value="option.value"
                 >
                   {{ option.label }}
                 </option>
               </select>
-              
+
               <!-- 按钮组 -->
-              <div v-else-if="property.type === 'buttonGroup'" class="button-group">
-                <button 
-                  v-for="option in property.options" 
+              <div
+                v-else-if="property.type === 'buttonGroup'"
+                class="button-group"
+              >
+                <button
+                  v-for="option in property.options"
                   :key="option.value"
-                  :class="{ active: getPropertyValue(selectedComponent, property) === option.value }"
+                  :class="{
+                    active:
+                      getPropertyValue(selectedComponent, property) ===
+                      option.value,
+                  }"
                   @click="handleButtonGroupSelect(property, option.value)"
                   class="group-button"
                   :title="option.label"
@@ -286,11 +438,11 @@ onUnmounted(() => {
                   {{ option.icon }}
                 </button>
               </div>
-              
+
               <!-- 默认文本输入 -->
-              <input 
+              <input
                 v-else
-                type="text" 
+                type="text"
                 :value="getPropertyValue(selectedComponent, property)"
                 @input="handlePropertyChange(property, $event)"
                 class="text-input"
@@ -300,7 +452,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-    
+
     <div v-else class="no-selection">
       <div class="no-selection-icon">🖱️</div>
       <p>请选择一个组件以编辑其属性</p>
@@ -363,7 +515,7 @@ onUnmounted(() => {
 }
 
 .category-title::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 50%;
@@ -521,4 +673,4 @@ onUnmounted(() => {
   font-size: 2.5rem;
   margin-bottom: 15px;
 }
-</style> 
+</style>
