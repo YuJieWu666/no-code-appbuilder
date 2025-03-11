@@ -824,13 +824,19 @@ const handleComponentUpdate = (event) => {
             fontSize: component.style.fontSize,
             fontWeight: component.style.fontWeight,
             textAlign: component.style.textAlign,
-            border: 'none',
+            border: component.style.border || 'none',
             outline: 'none',
-            cursor: 'pointer',
+            cursor: component.style.cursor || 'pointer',
+            boxShadow: component.style.boxShadow,
+            opacity: component.style.opacity,
+            transform: component.style.transform,
+            transition: 'all 0.3s ease',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis'
           }"
+          @mouseover="component.style.transform ? $event.target.style.transform = component.style.transform : null"
+          @mouseout="component.style.transform ? $event.target.style.transform = 'none' : null"
         >
           {{ component.properties.text }}
         </button>
@@ -846,6 +852,14 @@ const handleComponentUpdate = (event) => {
           fontSize: component.style.fontSize,
           fontWeight: component.style.fontWeight,
           textAlign: component.style.textAlign,
+          lineHeight: component.style.lineHeight,
+          letterSpacing: component.style.letterSpacing,
+          textDecoration: component.style.textDecoration,
+          opacity: component.style.opacity,
+          border: component.style.border,
+          boxShadow: component.style.boxShadow,
+          backgroundColor: component.style.backgroundColor,
+          borderRadius: component.style.borderRadius,
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
           overflow: 'hidden'
@@ -857,7 +871,7 @@ const handleComponentUpdate = (event) => {
       <div v-else-if="component.type === 'input'" class="component-input">
         <input 
           type="text" 
-          :placeholder="component.properties.placeholder || '请输入...'"
+          :placeholder="component.properties.placeholder"
           :style="{
             width: '100%',
             height: '100%',
@@ -867,7 +881,10 @@ const handleComponentUpdate = (event) => {
             fontSize: component.style.fontSize,
             textAlign: component.style.textAlign,
             border: component.style.border || '1px solid #ddd',
-            outline: 'none'
+            outline: 'none',
+            padding: component.style.padding,
+            opacity: component.style.opacity,
+            boxShadow: component.style.boxShadow
           }"
           v-model="component.properties.text"
         />
@@ -880,6 +897,9 @@ const handleComponentUpdate = (event) => {
           width: '100%',
           height: '100%',
           borderRadius: component.style.borderRadius,
+          border: component.style.border,
+          boxShadow: component.style.boxShadow,
+          opacity: component.style.opacity,
           overflow: 'hidden'
         }"
       >
@@ -889,7 +909,8 @@ const handleComponentUpdate = (event) => {
           :style="{
             width: '100%',
             height: '100%',
-            objectFit: component.style.objectFit || 'cover'
+            objectFit: component.style.objectFit || 'cover',
+            filter: component.style.filter
           }"
         />
       </div>
@@ -905,7 +926,10 @@ const handleComponentUpdate = (event) => {
           fontSize: component.style.fontSize,
           fontWeight: component.style.fontWeight,
           textAlign: component.style.textAlign,
-          borderRadius: component.style.borderRadius
+          borderRadius: component.style.borderRadius,
+          border: component.style.border,
+          boxShadow: component.style.boxShadow,
+          opacity: component.style.opacity
         }"
       >
         {{ component.properties.text || component.type }}

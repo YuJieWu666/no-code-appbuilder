@@ -31,6 +31,15 @@ const availableProperties = computed(() => {
         step: 1,
         unit: "px",
       },
+      {
+        key: "style.opacity",
+        label: "不透明度",
+        type: "range",
+        min: 0,
+        max: 100,
+        step: 1,
+        unit: "%"
+      }
     ],
   };
 
@@ -54,7 +63,7 @@ const availableProperties = computed(() => {
         label: "字体大小",
         type: "range",
         min: 12,
-        max: 40,
+        max: 100,
         step: 1,
         unit: "px",
       },
@@ -67,6 +76,15 @@ const availableProperties = computed(() => {
           { value: "bold", label: "粗体" },
           { value: "lighter", label: "细体" },
           { value: "bolder", label: "特粗" },
+          { value: "100", label: "100" },
+          { value: "200", label: "200" },
+          { value: "300", label: "300" },
+          { value: "400", label: "400" },
+          { value: "500", label: "500" },
+          { value: "600", label: "600" },
+          { value: "700", label: "700" },
+          { value: "800", label: "800" },
+          { value: "900", label: "900" }
         ],
       },
       {
@@ -78,25 +96,123 @@ const availableProperties = computed(() => {
           { value: "center", label: "居中", icon: "↔" },
           { value: "right", label: "右对齐", icon: "→" },
         ],
+      },
+      {
+        key: "style.boxShadow",
+        label: "阴影",
+        type: "select",
+        options: [
+          { value: "none", label: "无" },
+          { value: "0 2px 4px rgba(0,0,0,0.1)", label: "浅" },
+          { value: "0 4px 8px rgba(0,0,0,0.1)", label: "中" },
+          { value: "0 8px 16px rgba(0,0,0,0.1)", label: "深" },
+        ],
+      },
+      {
+        key: "style.border",
+        label: "边框",
+        type: "select",
+        options: [
+          { value: "none", label: "无" },
+          { value: "1px solid #ddd", label: "细线" },
+          { value: "2px solid #ddd", label: "粗线" },
+          { value: "1px dashed #ddd", label: "虚线" },
+        ],
       }
     ],
   };
 
   // 根据组件类型添加特定的样式属性
   switch (selectedComponent.value.type) {
+    case "button":
+      styleProperties.properties.push(
+        {
+          key: "style.transform",
+          label: "悬停效果",
+          type: "select",
+          options: [
+            { value: "none", label: "无" },
+            { value: "scale(1.05)", label: "放大" },
+            { value: "translateY(-2px)", label: "上浮" },
+          ],
+        },
+        {
+          key: "style.cursor",
+          label: "鼠标样式",
+          type: "select",
+          options: [
+            { value: "pointer", label: "手型" },
+            { value: "default", label: "默认" },
+          ],
+        }
+      );
+      break;
+
     case "input":
       styleProperties.properties.push(
         {
-          key: "style.border",
-          label: "边框",
+          key: "properties.placeholder",
+          label: "占位文本",
           type: "text",
-          placeholder: "1px solid #ccc"
+        },
+        {
+          key: "style.padding",
+          label: "内边距",
+          type: "range",
+          min: 0,
+          max: 30,
+          step: 1,
+          unit: "px",
+        }
+      );
+      break;
+
+    case "text":
+      styleProperties.properties.push(
+        {
+          key: "style.lineHeight",
+          label: "行高",
+          type: "range",
+          min: 1,
+          max: 3,
+          step: 0.1,
+          unit: "em",
+        },
+        {
+          key: "style.letterSpacing",
+          label: "字间距",
+          type: "range",
+          min: -2,
+          max: 10,
+          step: 0.5,
+          unit: "px",
+        },
+        {
+          key: "style.textDecoration",
+          label: "文本装饰",
+          type: "select",
+          options: [
+            { value: "none", label: "无" },
+            { value: "underline", label: "下划线" },
+            { value: "line-through", label: "删除线" },
+            { value: "overline", label: "上划线" },
+          ],
         }
       );
       break;
 
     case "image":
       styleProperties.properties = [
+        {
+          key: "properties.src",
+          label: "图片地址",
+          type: "text",
+        },
+        {
+          key: "properties.alt",
+          label: "替代文本",
+          type: "text",
+        },
         {
           key: "style.objectFit",
           label: "填充方式",
@@ -116,7 +232,20 @@ const availableProperties = computed(() => {
           min: 0,
           max: 50,
           step: 1,
-          unit: "px",
+          unit: "%",
+        },
+        {
+          key: "style.filter",
+          label: "滤镜效果",
+          type: "select",
+          options: [
+            { value: "none", label: "无" },
+            { value: "grayscale(100%)", label: "灰度" },
+            { value: "blur(2px)", label: "模糊" },
+            { value: "brightness(120%)", label: "明亮" },
+            { value: "contrast(120%)", label: "对比度" },
+            { value: "sepia(100%)", label: "复古" },
+          ],
         }
       ];
       break;
@@ -134,8 +263,14 @@ const getPropertyValue = (component, property) => {
     const styleProp = property.key.replace('style.', '');
     let value = component.style[styleProp];
     // 处理带单位的值
-    if (typeof value === 'string' && value.endsWith('px')) {
-      return parseInt(value);
+    if (typeof value === 'string') {
+      if (value.endsWith('px')) {
+        return parseInt(value);
+      } else if (value.endsWith('em')) {
+        return parseFloat(value);
+      }
+    } else if (styleProp === 'opacity') {
+      return Math.round((value || 1) * 100);
     }
     return value || "";
   } else if (property.key.startsWith('properties.')) {
@@ -156,8 +291,12 @@ const setPropertyValue = (component, property, value) => {
   if (property.key.startsWith('style.')) {
     const styleProp = property.key.replace('style.', '');
     // 处理需要单位的属性
-    if (['fontSize', 'borderRadius'].includes(styleProp) && !isNaN(value)) {
+    if (['fontSize', 'borderRadius', 'letterSpacing', 'padding'].includes(styleProp) && !isNaN(value)) {
       value = `${value}px`;
+    } else if (styleProp === 'lineHeight') {
+      value = `${value}em`;
+    } else if (styleProp === 'opacity') {
+      value = value / 100;
     }
     component.style[styleProp] = value;
   } else if (property.key.startsWith('properties.')) {
