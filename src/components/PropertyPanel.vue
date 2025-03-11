@@ -12,7 +12,7 @@ const availableProperties = computed(() => {
   const baseProperties = {
     name: "基础属性",
     properties: [
-      { key: "content", label: "内容", type: "text" },
+      { key: "properties.text", label: "内容", type: "text" },
       {
         key: "width",
         label: "宽度",
@@ -37,125 +37,66 @@ const availableProperties = computed(() => {
   // 样式属性组 - 根据组件类型不同而有所不同
   let styleProperties = {
     name: "样式属性",
-    properties: [],
+    properties: [
+      { key: "style.backgroundColor", label: "背景颜色", type: "color" },
+      { key: "style.color", label: "文字颜色", type: "color" },
+      {
+        key: "style.borderRadius",
+        label: "圆角",
+        type: "range",
+        min: 0,
+        max: 50,
+        step: 1,
+        unit: "px",
+      },
+      {
+        key: "style.fontSize",
+        label: "字体大小",
+        type: "range",
+        min: 12,
+        max: 40,
+        step: 1,
+        unit: "px",
+      },
+      {
+        key: "style.fontWeight",
+        label: "字体粗细",
+        type: "select",
+        options: [
+          { value: "normal", label: "正常" },
+          { value: "bold", label: "粗体" },
+          { value: "lighter", label: "细体" },
+          { value: "bolder", label: "特粗" },
+        ],
+      },
+      {
+        key: "style.textAlign",
+        label: "对齐方式",
+        type: "buttonGroup",
+        options: [
+          { value: "left", label: "左对齐", icon: "←" },
+          { value: "center", label: "居中", icon: "↔" },
+          { value: "right", label: "右对齐", icon: "→" },
+        ],
+      }
+    ],
   };
 
-  // 根据组件类型设置特定的样式属性
+  // 根据组件类型添加特定的样式属性
   switch (selectedComponent.value.type) {
-    case "button":
-      styleProperties.properties = [
-        { key: "style.backgroundColor", label: "背景颜色", type: "color" },
-        { key: "style.color", label: "文字颜色", type: "color" },
-        {
-          key: "style.borderRadius",
-          label: "圆角",
-          type: "range",
-          min: 0,
-          max: 50,
-          step: 1,
-          unit: "px",
-        },
-        {
-          key: "style.fontSize",
-          label: "字体大小",
-          type: "range",
-          min: 12,
-          max: 40,
-          step: 1,
-          unit: "px",
-        },
-        {
-          key: "style.fontWeight",
-          label: "字体粗细",
-          type: "select",
-          options: [
-            { value: "normal", label: "正常" },
-            { value: "bold", label: "粗体" },
-          ],
-        },
-        {
-          key: "style.textAlign",
-          label: "对齐方式",
-          type: "buttonGroup",
-          options: [
-            { value: "left", label: "左对齐", icon: "←" },
-            { value: "center", label: "居中", icon: "↔" },
-            { value: "right", label: "右对齐", icon: "→" },
-          ],
-        },
-      ];
-      break;
-
-    case "text":
-      styleProperties.properties = [
-        { key: "style.color", label: "文字颜色", type: "color" },
-        {
-          key: "style.fontSize",
-          label: "字体大小",
-          type: "range",
-          min: 12,
-          max: 40,
-          step: 1,
-          unit: "px",
-        },
-        {
-          key: "style.fontWeight",
-          label: "字体粗细",
-          type: "select",
-          options: [
-            { value: "normal", label: "正常" },
-            { value: "bold", label: "粗体" },
-          ],
-        },
-        {
-          key: "style.textAlign",
-          label: "对齐方式",
-          type: "buttonGroup",
-          options: [
-            { value: "left", label: "左对齐", icon: "←" },
-            { value: "center", label: "居中", icon: "↔" },
-            { value: "right", label: "右对齐", icon: "→" },
-          ],
-        },
-      ];
-      break;
-
     case "input":
-      styleProperties.properties = [
-        { key: "style.backgroundColor", label: "背景颜色", type: "color" },
-        { key: "style.color", label: "文字颜色", type: "color" },
+      styleProperties.properties.push(
         {
-          key: "style.borderRadius",
-          label: "圆角",
-          type: "range",
-          min: 0,
-          max: 50,
-          step: 1,
-          unit: "px",
-        },
-        {
-          key: "style.fontSize",
-          label: "字体大小",
-          type: "range",
-          min: 12,
-          max: 40,
-          step: 1,
-          unit: "px",
-        },
-      ];
+          key: "style.border",
+          label: "边框",
+          type: "text",
+          placeholder: "1px solid #ccc"
+        }
+      );
       break;
 
     case "image":
       styleProperties.properties = [
-        {
-          key: "style.borderRadius",
-          label: "圆角",
-          type: "range",
-          min: 0,
-          max: 50,
-          step: 1,
-          unit: "px",
-        },
         {
           key: "style.objectFit",
           label: "填充方式",
@@ -164,41 +105,21 @@ const availableProperties = computed(() => {
             { value: "contain", label: "包含" },
             { value: "cover", label: "覆盖" },
             { value: "fill", label: "填充" },
+            { value: "scale-down", label: "缩小" },
+            { value: "none", label: "原始" },
           ],
         },
-      ];
-      break;
-
-    case "toggle":
-      styleProperties.properties = [
-        { key: "style.backgroundColor", label: "轨道颜色", type: "color" },
-        { key: "style.color", label: "文字颜色", type: "color" },
         {
-          key: "style.fontSize",
-          label: "字体大小",
+          key: "style.borderRadius",
+          label: "圆角",
           type: "range",
-          min: 12,
-          max: 40,
+          min: 0,
+          max: 50,
           step: 1,
           unit: "px",
-        },
+        }
       ];
       break;
-
-    default:
-      styleProperties.properties = [
-        { key: "style.backgroundColor", label: "背景颜色", type: "color" },
-        { key: "style.color", label: "文字颜色", type: "color" },
-        {
-          key: "style.fontSize",
-          label: "字体大小",
-          type: "range",
-          min: 12,
-          max: 40,
-          step: 1,
-          unit: "px",
-        },
-      ];
   }
 
   return [baseProperties, styleProperties];
@@ -208,66 +129,96 @@ const availableProperties = computed(() => {
 const getPropertyValue = (component, property) => {
   if (!component) return "";
 
-  // 处理嵌套属性 (例如: 'style.backgroundColor')
-  if (property.key.includes(".")) {
-    const keys = property.key.split(".");
-    let value = component;
-    for (const key of keys) {
-      if (value && value[key] !== undefined) {
-        value = value[key];
-      } else {
-        return "";
-      }
+  // 处理样式属性
+  if (property.key.startsWith('style.')) {
+    const styleProp = property.key.replace('style.', '');
+    let value = component.style[styleProp];
+    // 处理带单位的值
+    if (typeof value === 'string' && value.endsWith('px')) {
+      return parseInt(value);
     }
-    return value;
+    return value || "";
+  } else if (property.key.startsWith('properties.')) {
+    // 处理 properties 对象中的属性
+    const propKey = property.key.replace('properties.', '');
+    return component.properties[propKey] || "";
+  } else {
+    // 处理组件本身的属性
+    return component[property.key];
   }
-
-  // 特殊处理 text 属性
-  if (property.key === "text") {
-    return component.properties?.text || "";
-  }
-
-  return component.properties?.[property.key] || "";
 };
 
 // 设置组件属性值
 const setPropertyValue = (component, property, value) => {
   if (!component) return;
 
-  if (property.key.includes(".")) {
-    const keys = property.key.split(".");
-    let target = component;
-
-    // 遍历直到倒数第二级
-    for (let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i];
-
-      if (!target[key]) {
-        target[key] = {};
-      }
-
-      target = target[key];
+  // 处理样式属性
+  if (property.key.startsWith('style.')) {
+    const styleProp = property.key.replace('style.', '');
+    // 处理需要单位的属性
+    if (['fontSize', 'borderRadius'].includes(styleProp) && !isNaN(value)) {
+      value = `${value}px`;
     }
-
-    // 设置最后一级的值
-    const lastKey = keys[keys.length - 1];
-    target[lastKey] = value;
+    component.style[styleProp] = value;
+  } else if (property.key.startsWith('properties.')) {
+    // 处理 properties 对象中的属性
+    const propKey = property.key.replace('properties.', '');
+    component.properties[propKey] = value;
   } else {
-    component[property.key] = value;
+    // 处理组件本身的属性（如 width、height）
+    if (['width', 'height'].includes(property.key)) {
+      component[property.key] = parseInt(value);
+      // 立即触发组件更新事件
+      const updateEvent = new CustomEvent("component-updated", {
+        detail: {
+          componentId: component.id,
+          property: property.key,
+          value: parseInt(value)
+        }
+      });
+      document.dispatchEvent(updateEvent);
+    } else {
+      component[property.key] = value;
+    }
   }
 };
 
-// 处理组件属性变更
+// 处理属性变更
 const handlePropertyChange = (property, event) => {
   if (!selectedComponent.value) return;
+  
+  let value = event.target.value;
+  
+  // 对于范围类型的输入，确保值是数字
+  if (property.type === 'range') {
+    value = parseInt(value);
+  }
 
-  // 直接更新属性
-  updateProperty(property.key, event.target.value);
+  // 检查组件是否仍然存在于画布中
+  const componentExists = document.querySelector(`[data-component-id="${selectedComponent.value.id}"]`);
+  if (!componentExists) {
+    selectedComponent.value = null;
+    return;
+  }
+  
+  // 更新属性值
+  setPropertyValue(selectedComponent.value, property, value);
+
+  // 触发属性更新事件
+  const updateEvent = new CustomEvent("property-updated", {
+    detail: {
+      componentId: selectedComponent.value.id,
+      propertyName: property.key,
+      value: value
+    },
+  });
+  document.dispatchEvent(updateEvent);
 };
 
 // 处理按钮组选择
 const handleButtonGroupSelect = (property, value) => {
-  handlePropertyChange(property, { target: { value } });
+  if (!selectedComponent.value) return;
+  setPropertyValue(selectedComponent.value, property, value);
 };
 
 // 监听组件选择事件
@@ -275,59 +226,24 @@ const onComponentSelected = (event) => {
   selectedComponent.value = event.detail;
 };
 
+// 监听组件删除事件
+const onComponentDeleted = (event) => {
+  if (selectedComponent.value && selectedComponent.value.id === event.detail.componentId) {
+    selectedComponent.value = null;
+  }
+};
+
 // 组件挂载时添加事件监听
 onMounted(() => {
   document.addEventListener("component-selected", onComponentSelected);
+  document.addEventListener("component-deleted", onComponentDeleted);
 });
 
 // 组件卸载时移除事件监听
 onUnmounted(() => {
   document.removeEventListener("component-selected", onComponentSelected);
+  document.removeEventListener("component-deleted", onComponentDeleted);
 });
-
-// 在属性更新时触发事件
-const updateProperty = (propertyName, value) => {
-  if (selectedComponent.value) {
-    // 创建一个新的组件对象，以确保响应式更新
-    const updatedComponent = { ...selectedComponent.value };
-
-    if (propertyName.includes(".")) {
-      const keys = propertyName.split(".");
-      let target = updatedComponent;
-
-      // 遍历直到倒数第二级
-      for (let i = 0; i < keys.length - 1; i++) {
-        const key = keys[i];
-        if (!target[key]) {
-          target[key] = {};
-        }
-        target = target[key];
-      }
-
-      // 设置最后一级的值
-      const lastKey = keys[keys.length - 1];
-      target[lastKey] = value;
-    } else {
-      if (!updatedComponent.properties) {
-        updatedComponent.properties = {};
-      }
-      updatedComponent.properties[propertyName] = value;
-    }
-
-    // 更新选中的组件
-    selectedComponent.value = updatedComponent;
-
-    // 触发属性更新事件
-    const updateEvent = new CustomEvent("property-updated", {
-      detail: {
-        componentId: updatedComponent.id,
-        propertyName,
-        value,
-      },
-    });
-    document.dispatchEvent(updateEvent);
-  }
-};
 </script>
 
 <template>

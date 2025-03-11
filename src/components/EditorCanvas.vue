@@ -239,31 +239,43 @@ const onDrop = (event) => {
 const createComponent = (componentData) => {
   const componentId = `${componentData.type}-${Date.now()}`;
 
-  // 创建新组件对象
-  const newComponent = ref({
+  // 创建新组件对象，使用 reactive 确保深层响应性
+  const newComponent = reactive({
     id: componentId,
     type: componentData.type,
     left: componentData.left || 0,
     top: componentData.top || 0,
     width: componentData.width || 100,
     height: componentData.height || 40,
-    properties: {
-      text: componentData.type === "button" ? "按钮" : "文本内容",
-      type: componentData.type,
+    style: reactive({
       backgroundColor: "#3490dc",
       color: "#ffffff",
       borderRadius: "4px",
       fontSize: "14px",
-      ...componentData.properties,
-    },
-    events: [],
+      fontWeight: "normal",
+      textAlign: "center",
+      border: "none",
+      cursor: "pointer",
+      boxSizing: "border-box",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      ...componentData.style
+    }),
+    properties: reactive({
+      text: componentData.type === "button" ? "按钮" : "文本内容",
+      ...componentData.properties
+    }),
+    events: []
   });
 
   // 添加到组件列表
-  canvasComponents.value.push(newComponent.value);
-  selectComponent(newComponent.value);
+  canvasComponents.value.push(newComponent);
+  
+  // 选中新创建的组件
+  selectComponent(newComponent);
 
-  return newComponent.value;
+  return newComponent;
 };
 
 // 选择组件
@@ -344,7 +356,7 @@ const handleComponentSelected = (event) => {
   selectedComponent.value = event.detail;
 };
 
-// 组件样式计算
+// 修改组件样式计算函数
 const getComponentStyle = (component) => {
   return {
     position: "absolute",
@@ -352,7 +364,7 @@ const getComponentStyle = (component) => {
     top: `${component.top}px`,
     width: `${component.width}px`,
     height: `${component.height}px`,
-    ...component.properties,
+    ...component.style
   };
 };
 
@@ -626,6 +638,9 @@ onMounted(() => {
 
   // 监听属性更新事件
   document.addEventListener("property-updated", handlePropertyUpdate);
+
+  // 监听组件更新事件
+  document.addEventListener("component-updated", handleComponentUpdate);
 });
 
 // 添加画布缩放功能
@@ -664,13 +679,17 @@ const handleCanvasDrag = (event) => {
 const handleKeyDown = (event) => {
   if (!selectedComponent.value) return;
 
-  if (event.key === "Delete" || event.key === "Backspace") {
+  // 检查是否在属性面板中编辑
+  const isEditingProperty = event.target.tagName.toLowerCase() === 'input' || 
+                           event.target.tagName.toLowerCase() === 'textarea';
+  
+  if ((event.key === "Delete" || event.key === "Backspace") && !isEditingProperty) {
     event.preventDefault();
     deleteSelectedComponent();
   }
 };
 
-// 添加deleteSelectedComponent函数（如果还没有的话）
+// 修改deleteSelectedComponent函数
 const deleteSelectedComponent = () => {
   if (selectedComponent.value) {
     const index = canvasComponents.value.findIndex(
@@ -678,6 +697,10 @@ const deleteSelectedComponent = () => {
     );
     if (index !== -1) {
       canvasComponents.value.splice(index, 1);
+      // 发送组件删除事件
+      document.dispatchEvent(new CustomEvent('component-deleted', {
+        detail: { componentId: selectedComponent.value.id }
+      }));
       selectedComponent.value = null;
       // 保存当前状态到历史记录
       saveToHistory();
@@ -729,7 +752,39 @@ const handlePropertyUpdate = (event) => {
 // 组件卸载时移除事件监听
 onUnmounted(() => {
   document.removeEventListener("property-updated", handlePropertyUpdate);
+  document.removeEventListener("component-updated", handleComponentUpdate);
 });
+
+// 修改 handleComponentUpdate 函数
+const handleComponentUpdate = (event) => {
+  const { componentId, property, value } = event.detail;
+  const component = canvasComponents.value.find(comp => comp.id === componentId);
+  
+  if (component) {
+    // 更新组件属性
+    if (property.startsWith('style.')) {
+      const styleProp = property.split('.')[1];
+      if (!component.style) {
+        component.style = {};
+      }
+      component.style[styleProp] = value;
+    } else if (['width', 'height'].includes(property)) {
+      // 直接更新宽高属性
+      component[property] = value;
+    } else {
+      if (!component.properties) {
+        component.properties = {};
+      }
+      component.properties[property] = value;
+    }
+    
+    // 强制重新渲染
+    canvasComponents.value = [...canvasComponents.value];
+    
+    // 保存到历史记录
+    saveToHistory();
+  }
+};
 </script>
 
 <template>
@@ -761,40 +816,98 @@ onUnmounted(() => {
       <div v-if="component.type === 'button'" class="component-button">
         <button
           :style="{
-            backgroundColor: component.properties.backgroundColor,
-            color: component.properties.color,
-            borderRadius: component.properties.borderRadius,
-            fontSize: component.properties.fontSize,
             width: '100%',
             height: '100%',
+            backgroundColor: component.style.backgroundColor,
+            color: component.style.color,
+            borderRadius: component.style.borderRadius,
+            fontSize: component.style.fontSize,
+            fontWeight: component.style.fontWeight,
+            textAlign: component.style.textAlign,
             border: 'none',
+            outline: 'none',
             cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
           }"
         >
           {{ component.properties.text }}
         </button>
       </div>
 
-      <div v-else-if="component.type === 'text'" class="component-text">
+      <div 
+        v-else-if="component.type === 'text'" 
+        class="component-text" 
+        :style="{
+          width: '100%',
+          height: '100%',
+          color: component.style.color,
+          fontSize: component.style.fontSize,
+          fontWeight: component.style.fontWeight,
+          textAlign: component.style.textAlign,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          overflow: 'hidden'
+        }"
+      >
         {{ component.properties.text }}
       </div>
 
       <div v-else-if="component.type === 'input'" class="component-input">
-        <input type="text" :placeholder="component.properties.placeholder" />
+        <input 
+          type="text" 
+          :placeholder="component.properties.placeholder || '请输入...'"
+          :style="{
+            width: '100%',
+            height: '100%',
+            backgroundColor: component.style.backgroundColor,
+            color: component.style.color,
+            borderRadius: component.style.borderRadius,
+            fontSize: component.style.fontSize,
+            textAlign: component.style.textAlign,
+            border: component.style.border || '1px solid #ddd',
+            outline: 'none'
+          }"
+          v-model="component.properties.text"
+        />
       </div>
 
-      <div v-else-if="component.type === 'image'" class="component-image">
-        <div class="placeholder-image">{{ component.properties.alt }}</div>
+      <div 
+        v-else-if="component.type === 'image'" 
+        class="component-image" 
+        :style="{
+          width: '100%',
+          height: '100%',
+          borderRadius: component.style.borderRadius,
+          overflow: 'hidden'
+        }"
+      >
+        <img 
+          :src="component.properties.src || 'https://via.placeholder.com/150'" 
+          :alt="component.properties.alt || '图片'"
+          :style="{
+            width: '100%',
+            height: '100%',
+            objectFit: component.style.objectFit || 'cover'
+          }"
+        />
       </div>
 
-      <div v-else-if="component.type === 'toggle'" class="component-toggle">
-        <div class="toggle-track">
-          <div class="toggle-thumb"></div>
-        </div>
-        <span class="toggle-label">{{ component.properties.label }}</span>
-      </div>
-
-      <div v-else class="component-default">
+      <div 
+        v-else 
+        class="component-default" 
+        :style="{
+          width: '100%',
+          height: '100%',
+          backgroundColor: component.style.backgroundColor,
+          color: component.style.color,
+          fontSize: component.style.fontSize,
+          fontWeight: component.style.fontWeight,
+          textAlign: component.style.textAlign,
+          borderRadius: component.style.borderRadius
+        }"
+      >
         {{ component.properties.text || component.type }}
       </div>
 
@@ -907,24 +1020,16 @@ onUnmounted(() => {
   box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.2);
 }
 
-.component-button {
+.component-button,
+.component-text,
+.component-input,
+.component-image,
+.component-default {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.component-text {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.component-input {
-  width: 100%;
-  height: 100%;
 }
 
 .component-input input {
@@ -983,14 +1088,6 @@ onUnmounted(() => {
 .toggle-label {
   margin-left: 10px;
   font-size: 0.85rem;
-}
-
-.component-default {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* 调整大小的手柄样式 */
