@@ -62,23 +62,37 @@
           border="b"
         >
           <v-toolbar-title class="text-subtitle-2">
-            {{ designMode === 'style' ? '组件库' : '事件节点' }}
+            {{ designMode === 'style' ? '组件库' : '系统事件' }}
           </v-toolbar-title>
         </v-toolbar>
         <v-container class="pa-4">
           <ComponentLibrary v-if="designMode === 'style'" />
-          <div v-else class="event-nodes">
-            <!-- 这里将来放置事件节点列表 -->
-            <div class="text-subtitle-2 text-medium-emphasis">
-              事件流设计开发中...
-            </div>
+          <div v-else class="system-events">
+            <v-list>
+              <v-list-item
+                v-for="event in systemEvents"
+                :key="event.type"
+                :title="event.name"
+                :subtitle="event.description"
+                class="mb-2"
+                rounded="lg"
+                draggable="true"
+                @dragstart="handleDragStart($event, event)"
+                @click="addSystemEventNode(event)"
+              >
+                <template v-slot:prepend>
+                  <v-icon :icon="event.icon" color="primary"></v-icon>
+                </template>
+              </v-list-item>
+            </v-list>
           </div>
         </v-container>
       </v-navigation-drawer>
 
       <v-container fluid class="center-panel pa-0 fill-height">
         <div class="canvas-container">
-          <EditorCanvas ref="editorCanvasRef" />
+          <EditorCanvas v-if="designMode === 'style'" ref="editorCanvasRef" />
+          <EventFlowCanvas v-else ref="eventFlowCanvasRef" />
         </div>
       </v-container>
 
@@ -100,12 +114,14 @@
         </v-toolbar>
         <v-container class="pa-4">
           <PropertyPanel v-if="designMode === 'style'" />
-          <div v-else class="event-config">
-            <!-- 这里将来放置事件配置面板 -->
-            <div class="text-subtitle-2 text-medium-emphasis">
-              事件配置开发中...
-            </div>
-          </div>
+          <EventConfigPanel
+            v-else
+            :selected-node="selectedEventNode"
+            :selected-connection="selectedEventConnection"
+            :available-event-types="availableEventTypes"
+            @update-event-type="updateEventType"
+            @delete-connection="deleteEventConnection"
+          />
         </v-container>
       </v-navigation-drawer>
     </v-main>
@@ -113,16 +129,62 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import ComponentLibrary from '../components/ComponentLibrary.vue';
 import EditorCanvas from '../components/EditorCanvas.vue';
+import EventFlowCanvas from '../components/EventFlowCanvas.vue';
 import PropertyPanel from '../components/PropertyPanel.vue';
+import EventConfigPanel from '../components/EventConfigPanel.vue';
 
 const router = useRouter();
 const editorCanvasRef = ref(null);
-const designMode = ref('style'); // 'style' 或 'flow'
+const eventFlowCanvasRef = ref(null);
+const designMode = ref('style');
 
+// 添加状态管理变量
+const styleComponents = ref([]); // 保存样式流中的组件
+const eventNodes = ref([]); // 保存事件流中的节点
+const eventConnections = ref([]); // 保存事件流中的连接
+
+// 事件流相关的状态
+const selectedEventNode = ref(null);
+const selectedEventConnection = ref(null);
+
+// 可用的事件类型
+const availableEventTypes = [
+  { value: 'click', label: '点击' },
+  { value: 'hover', label: '悬停' },
+  { value: 'input', label: '输入' },
+  { value: 'focus', label: '获得焦点' },
+  { value: 'blur', label: '失去焦点' }
+];
+
+// 系统事件列表
+const systemEvents = [
+  {
+    type: 'dialog',
+    name: '弹出框',
+    description: '显示一个对话框',
+    icon: 'mdi-message-text',
+    properties: {
+      title: '提示',
+      content: '这是一个提示框'
+    }
+  },
+  {
+    type: 'notification',
+    name: '通知提醒',
+    description: '显示一个通知消息',
+    icon: 'mdi-bell',
+    properties: {
+      type: 'info',
+      message: '这是一条通知'
+    }
+  }
+];
+
+// 处理预览
 const handlePreview = () => {
   if (editorCanvasRef.value) {
     const components = editorCanvasRef.value.canvasComponents;
@@ -131,9 +193,121 @@ const handlePreview = () => {
   }
 };
 
-const switchDesignMode = (mode) => {
-  designMode.value = mode;
+// 切换设计模式
+const switchDesignMode = async (mode) => {
+  if (mode === designMode.value) return;
+
+  try {
+    // 保存当前模式的状态
+    if (designMode.value === 'style' && editorCanvasRef.value) {
+      styleComponents.value = JSON.parse(JSON.stringify(editorCanvasRef.value.canvasComponents));
+    } else if (designMode.value === 'flow' && eventFlowCanvasRef.value) {
+      eventNodes.value = JSON.parse(JSON.stringify(eventFlowCanvasRef.value.eventNodes));
+      eventConnections.value = JSON.parse(JSON.stringify(eventFlowCanvasRef.value.connections));
+    }
+
+    // 切换模式
+    designMode.value = mode;
+
+    // 等待 DOM 更新
+    await nextTick();
+
+    // 恢复目标模式的状态
+    if (mode === 'style' && editorCanvasRef.value) {
+      editorCanvasRef.value.canvasComponents = JSON.parse(JSON.stringify(styleComponents.value));
+    } else if (mode === 'flow' && eventFlowCanvasRef.value) {
+      if (eventNodes.value.length === 0) {
+        // 首次切换到事件流模式时，初始化事件节点
+        eventFlowCanvasRef.value.initComponentNodes(styleComponents.value);
+      } else {
+        // 恢复之前保存的事件流状态
+        eventFlowCanvasRef.value.eventNodes = JSON.parse(JSON.stringify(eventNodes.value));
+        eventFlowCanvasRef.value.connections = JSON.parse(JSON.stringify(eventConnections.value));
+      }
+    }
+  } catch (error) {
+    console.error('切换模式时出错:', error);
+  }
 };
+
+// 添加系统事件节点
+const addSystemEventNode = (event) => {
+  if (eventFlowCanvasRef.value) {
+    eventFlowCanvasRef.value.addSystemNode(
+      event.type,
+      event.name,
+      event.description
+    );
+  }
+};
+
+// 更新事件类型
+const updateEventType = (eventType) => {
+  if (eventFlowCanvasRef.value && selectedEventConnection.value) {
+    eventFlowCanvasRef.value.updateConnectionEventType(
+      selectedEventConnection.value,
+      eventType
+    );
+  }
+};
+
+// 删除事件连接
+const deleteEventConnection = () => {
+  if (eventFlowCanvasRef.value && selectedEventConnection.value) {
+    eventFlowCanvasRef.value.deleteConnection(selectedEventConnection.value);
+  }
+};
+
+// 处理拖拽开始
+const handleDragStart = (event, systemEvent) => {
+  const eventData = {
+    type: 'system-event',
+    eventType: systemEvent.type,
+    name: systemEvent.name,
+    description: systemEvent.description,
+    properties: systemEvent.properties
+  };
+  event.dataTransfer.setData('application/json', JSON.stringify(eventData));
+};
+
+// 监听组件变化
+watch(editorCanvasRef, (newCanvas) => {
+  if (newCanvas && designMode.value === 'style') {
+    // 初始化时同步状态
+    styleComponents.value = JSON.parse(JSON.stringify(newCanvas.canvasComponents));
+  }
+}, { immediate: true });
+
+// 监听事件流画布的变化
+watch(eventFlowCanvasRef, (newCanvas) => {
+  if (newCanvas && designMode.value === 'flow') {
+    // 初始化时同步状态
+    eventNodes.value = JSON.parse(JSON.stringify(newCanvas.eventNodes));
+    eventConnections.value = JSON.parse(JSON.stringify(newCanvas.connections));
+  }
+}, { immediate: true });
+
+// 监听样式流画布的组件变化
+watch(() => editorCanvasRef.value?.canvasComponents, (newComponents) => {
+  if (newComponents && designMode.value === 'style') {
+    styleComponents.value = JSON.parse(JSON.stringify(newComponents));
+  }
+}, { deep: true });
+
+// 监听事件流画布的状态变化
+watch([
+  () => eventFlowCanvasRef.value?.eventNodes,
+  () => eventFlowCanvasRef.value?.connections
+], ([newNodes, newConnections]) => {
+  if (designMode.value === 'flow') {
+    if (newNodes) {
+      eventNodes.value = JSON.parse(JSON.stringify(newNodes));
+    }
+    if (newConnections) {
+      eventConnections.value = JSON.parse(JSON.stringify(newConnections));
+    }
+  }
+}, { deep: true });
 </script>
 
 <style scoped>
@@ -218,11 +392,16 @@ const switchDesignMode = (mode) => {
   z-index: 1;
 }
 
-.event-nodes, .event-config {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--v-medium-emphasis-color);
+.system-events {
+  .v-list-item {
+    margin-bottom: 8px;
+    border: 1px solid rgb(var(--v-theme-outline));
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: rgb(var(--v-theme-primary));
+      background-color: rgb(var(--v-theme-primary), 0.05);
+    }
+  }
 }
 </style> 
