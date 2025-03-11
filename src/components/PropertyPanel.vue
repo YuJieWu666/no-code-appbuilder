@@ -328,9 +328,13 @@ const handlePropertyChange = (property, event) => {
   
   let value = event.target.value;
   
-  // 对于范围类型的输入，确保值是数字
+  // 处理带单位的属性
   if (property.type === 'range') {
-    value = parseInt(value);
+    if (property.key === 'style.opacity') {
+      value = value / 100;
+    } else if (property.unit) {
+      value = `${value}${property.unit}`;
+    }
   }
 
   // 检查组件是否仍然存在于画布中

@@ -767,10 +767,11 @@ const handleComponentUpdate = (event) => {
       if (!component.style) {
         component.style = {};
       }
+      // 直接应用带单位的值
       component.style[styleProp] = value;
     } else if (['width', 'height'].includes(property)) {
       // 直接更新宽高属性
-      component[property] = value;
+      component[property] = parseInt(value);
     } else {
       if (!component.properties) {
         component.properties = {};
