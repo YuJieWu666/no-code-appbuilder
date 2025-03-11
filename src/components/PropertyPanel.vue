@@ -12,6 +12,17 @@ const availableProperties = computed(() => {
   const baseProperties = {
     name: "基础属性",
     properties: [
+      { 
+        key: "name", 
+        label: "组件名称", 
+        type: "text",
+        validator: (value) => {
+          // 检查是否有重名
+          return !canvasComponents.value.some(
+            comp => comp.id !== selectedComponent.value.id && comp.name === value
+          );
+        }
+      },
       { key: "properties.text", label: "内容", type: "text" },
       {
         key: "width",

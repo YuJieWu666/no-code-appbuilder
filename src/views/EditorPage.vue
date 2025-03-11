@@ -8,7 +8,36 @@
         <v-divider vertical class="mx-4"></v-divider>
         <span class="text-subtitle-2 text-medium-emphasis">未命名设计</span>
       </div>
+
       <v-spacer></v-spacer>
+      
+      <!-- 中间的设计模式切换按钮组 -->
+      <div class="mode-switch">
+        <v-btn-group>
+          <v-btn
+            :color="designMode === 'style' ? 'primary' : undefined"
+            @click="switchDesignMode('style')"
+            class="text-none"
+            variant="tonal"
+          >
+            <v-icon start>mdi-palette</v-icon>
+            样式设计
+          </v-btn>
+          <v-btn
+            :color="designMode === 'flow' ? 'primary' : undefined"
+            @click="switchDesignMode('flow')"
+            class="text-none"
+            variant="tonal"
+          >
+            <v-icon start>mdi-vector-line</v-icon>
+            事件流
+          </v-btn>
+        </v-btn-group>
+      </div>
+
+      <v-spacer></v-spacer>
+
+      <!-- 右侧预览按钮 -->
       <v-btn
         color="primary"
         @click="handlePreview"
@@ -32,10 +61,18 @@
           color="background"
           border="b"
         >
-          <v-toolbar-title class="text-subtitle-2">组件库</v-toolbar-title>
+          <v-toolbar-title class="text-subtitle-2">
+            {{ designMode === 'style' ? '组件库' : '事件节点' }}
+          </v-toolbar-title>
         </v-toolbar>
         <v-container class="pa-4">
-          <ComponentLibrary />
+          <ComponentLibrary v-if="designMode === 'style'" />
+          <div v-else class="event-nodes">
+            <!-- 这里将来放置事件节点列表 -->
+            <div class="text-subtitle-2 text-medium-emphasis">
+              事件流设计开发中...
+            </div>
+          </div>
         </v-container>
       </v-navigation-drawer>
 
@@ -57,10 +94,18 @@
           color="background"
           border="b"
         >
-          <v-toolbar-title class="text-subtitle-2">属性设置</v-toolbar-title>
+          <v-toolbar-title class="text-subtitle-2">
+            {{ designMode === 'style' ? '属性设置' : '事件配置' }}
+          </v-toolbar-title>
         </v-toolbar>
         <v-container class="pa-4">
-          <PropertyPanel />
+          <PropertyPanel v-if="designMode === 'style'" />
+          <div v-else class="event-config">
+            <!-- 这里将来放置事件配置面板 -->
+            <div class="text-subtitle-2 text-medium-emphasis">
+              事件配置开发中...
+            </div>
+          </div>
         </v-container>
       </v-navigation-drawer>
     </v-main>
@@ -76,6 +121,7 @@ import PropertyPanel from '../components/PropertyPanel.vue';
 
 const router = useRouter();
 const editorCanvasRef = ref(null);
+const designMode = ref('style'); // 'style' 或 'flow'
 
 const handlePreview = () => {
   if (editorCanvasRef.value) {
@@ -83,6 +129,10 @@ const handlePreview = () => {
     localStorage.setItem('previewComponents', JSON.stringify(components));
     router.push('/preview');
   }
+};
+
+const switchDesignMode = (mode) => {
+  designMode.value = mode;
 };
 </script>
 
@@ -159,5 +209,20 @@ const handlePreview = () => {
   font-size: 13px;
   font-weight: 500;
   margin-bottom: 4px;
+}
+
+.mode-switch {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.event-nodes, .event-config {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--v-medium-emphasis-color);
 }
 </style> 

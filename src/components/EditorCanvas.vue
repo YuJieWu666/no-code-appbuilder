@@ -238,10 +238,29 @@ const onDrop = (event) => {
 // 修改 createComponent 函数
 const createComponent = (componentData) => {
   const componentId = `${componentData.type}-${Date.now()}`;
+  
+  // 生成默认名称（例如：按钮1，按钮2）
+  const typeNameMap = {
+    button: "按钮",
+    text: "文本",
+    input: "输入框",
+    image: "图片"
+  };
+  
+  const baseName = typeNameMap[componentData.type] || componentData.type;
+  let counter = 1;
+  let componentName = `${baseName}${counter}`;
+  
+  // 确保名称不重复
+  while (canvasComponents.value.some(comp => comp.name === componentName)) {
+    counter++;
+    componentName = `${baseName}${counter}`;
+  }
 
   // 创建新组件对象，使用 reactive 确保深层响应性
   const newComponent = reactive({
     id: componentId,
+    name: componentName,
     type: componentData.type,
     left: componentData.left || 0,
     top: componentData.top || 0,
